@@ -7,54 +7,39 @@ if not humanoidRootPart then
     return
 end
 
-local spawnedParts = {} -- Table to track spawned parts
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local winEvent = replicatedStorage:FindFirstChild("GiveWin")
 
--- Function to create and modify EndCircle parts
-local function modifyPart(part)
-    local clone = part:Clone()
-    clone.Parent = part.Parent
-    clone.Size = Vector3.new(1, 1, 1) -- Make it smaller
-    clone.CanCollide = false
-    clone.Anchored = true
-    clone.Position = humanoidRootPart.Position + Vector3.new(0, 3, 0) -- Teleport to player
-    
-    -- Make it move up & down
-    spawn(function()
-        while clone.Parent do
-            clone.Position = humanoidRootPart.Position + Vector3.new(0, 5, 0)
-            wait(0.5)
-            clone.Position = humanoidRootPart.Position + Vector3.new(0, 3, 0)
-            wait(0.5)
-        end
-    end)
-    
-    table.insert(spawnedParts, clone) -- Track the cloned part
-end
-
--- Function to find and duplicate EndCircle parts
-local function scanAndDuplicate()
+-- Function to teleport all EndCircles above the player
+local function teleportEndCircles()
     while true do
-        -- Remove old parts
-        for _, oldPart in pairs(spawnedParts) do
-            if oldPart and oldPart.Parent then
-                oldPart:Destroy()
-            end
-        end
-        spawnedParts = {} -- Clear the table
-        
-        -- Find all EndCircle parts and duplicate them
         for _, world in pairs(workspace.Worlds:GetChildren()) do
             if world:FindFirstChild("EndZone") and world.EndZone:FindFirstChild("EndCircle") then
                 local endCircle = world.EndZone.EndCircle:FindFirstChild("Part")
                 if endCircle then
-                    modifyPart(endCircle)
+                    endCircle.CanCollide = false
+                    endCircle.Anchored = true
+                    endCircle.Size = Vector3.new(1, 1, 1) -- Make it smaller
+                    endCircle.Position = humanoidRootPart.Position + Vector3.new(0, 5, 0) -- Teleport above head
                 end
             end
         end
-        
-        wait(1) -- Duplicates every second
+        wait(1) -- Teleports every second
     end
 end
 
--- Start the duplication loop
-scanAndDuplicate()
+-- Function to spam the win event (no cooldown)
+local function spamWins()
+    if winEvent then
+        while true do
+            winEvent:FireServer() -- Give unlimited wins
+            wait(0.1) -- Adjust delay if needed
+        end
+    else
+        warn("Win event not found!")
+    end
+end
+
+-- Start teleporting EndCircles & bypassing win cooldown
+spawn(teleportEndCircles)
+spawn(spamWins)
