@@ -1,45 +1,60 @@
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
-local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
 if not humanoidRootPart then
     warn("No HumanoidRootPart found!")
     return
 end
 
--- Function to modify EndCircle parts
+local spawnedParts = {} -- Table to track spawned parts
+
+-- Function to create and modify EndCircle parts
 local function modifyPart(part)
-    -- Make it smaller
-    part.Size = Vector3.new(1, 1, 1)
-    part.CanCollide = false
+    local clone = part:Clone()
+    clone.Parent = part.Parent
+    clone.Size = Vector3.new(1, 1, 1) -- Make it smaller
+    clone.CanCollide = false
+    clone.Anchored = true
+    clone.Position = humanoidRootPart.Position + Vector3.new(0, 3, 0) -- Teleport to player
     
-    -- Move it to player
-    part.Position = humanoidRootPart.Position + Vector3.new(0, 3, 0)
+    -- Make it move up & down
+    spawn(function()
+        while clone.Parent do
+            clone.Position = humanoidRootPart.Position + Vector3.new(0, 5, 0)
+            wait(0.5)
+            clone.Position = humanoidRootPart.Position + Vector3.new(0, 3, 0)
+            wait(0.5)
+        end
+    end)
     
-    -- Make it move up and down
+    table.insert(spawnedParts, clone) -- Track the cloned part
+end
+
+-- Function to find and duplicate EndCircle parts
+local function scanAndDuplicate()
     while true do
-        part.Position = humanoidRootPart.Position + Vector3.new(0, 5, 0)
-        wait(0.5)
-        part.Position = humanoidRootPart.Position + Vector3.new(0, 3, 0)
-        wait(0.5)
+        -- Remove old parts
+        for _, oldPart in pairs(spawnedParts) do
+            if oldPart and oldPart.Parent then
+                oldPart:Destroy()
+            end
+        end
+        spawnedParts = {} -- Clear the table
+        
+        -- Find all EndCircle parts and duplicate them
+        for _, world in pairs(workspace.Worlds:GetChildren()) do
+            if world:FindFirstChild("EndZone") and world.EndZone:FindFirstChild("EndCircle") then
+                local endCircle = world.EndZone.EndCircle:FindFirstChild("Part")
+                if endCircle then
+                    modifyPart(endCircle)
+                end
+            end
+        end
+        
+        wait(1) -- Duplicates every second
     end
 end
 
--- Clone function to bypass win delay
-local function clonePart(originalPart)
-    for i = 1, 10 do -- Creates 10 clones
-        local clone = originalPart:Clone()
-        clone.Parent = originalPart.Parent
-        modifyPart(clone)
-        wait(0.1) -- Small delay to avoid detection
-    end
-end
-
--- Find and modify all EndCircle parts
-for _, world in pairs(workspace.Worlds:GetChildren()) do
-    if world:FindFirstChild("EndZone") and world.EndZone:FindFirstChild("EndCircle") then
-        local endCircle = world.EndZone.EndCircle.Part
-        modifyPart(endCircle)
-        clonePart(endCircle)
-    end
-end
+-- Start the duplication loop
+scanAndDuplicate()
