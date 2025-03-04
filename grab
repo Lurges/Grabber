@@ -1,17 +1,45 @@
-local ScreenGui = Instance.new("ScreenGui")
-local TextBox = Instance.new("TextLabel")
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
 
-ScreenGui.Parent = game.CoreGui
-TextBox.Parent = ScreenGui
-TextBox.Size = UDim2.new(1, 0, 1, 0)
-TextBox.BackgroundTransparency = 0.5
-TextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-TextBox.TextSize = 14
-TextBox.TextWrapped = true
-
-local text = ""
-for _, obj in pairs(game:GetDescendants()) do
-    text = text .. obj:GetFullName() .. "\n"
+if not humanoidRootPart then
+    warn("No HumanoidRootPart found!")
+    return
 end
 
-TextBox.Text = text
+-- Function to modify EndCircle parts
+local function modifyPart(part)
+    -- Make it smaller
+    part.Size = Vector3.new(1, 1, 1)
+    part.CanCollide = false
+    
+    -- Move it to player
+    part.Position = humanoidRootPart.Position + Vector3.new(0, 3, 0)
+    
+    -- Make it move up and down
+    while true do
+        part.Position = humanoidRootPart.Position + Vector3.new(0, 5, 0)
+        wait(0.5)
+        part.Position = humanoidRootPart.Position + Vector3.new(0, 3, 0)
+        wait(0.5)
+    end
+end
+
+-- Clone function to bypass win delay
+local function clonePart(originalPart)
+    for i = 1, 10 do -- Creates 10 clones
+        local clone = originalPart:Clone()
+        clone.Parent = originalPart.Parent
+        modifyPart(clone)
+        wait(0.1) -- Small delay to avoid detection
+    end
+end
+
+-- Find and modify all EndCircle parts
+for _, world in pairs(workspace.Worlds:GetChildren()) do
+    if world:FindFirstChild("EndZone") and world.EndZone:FindFirstChild("EndCircle") then
+        local endCircle = world.EndZone.EndCircle.Part
+        modifyPart(endCircle)
+        clonePart(endCircle)
+    end
+end
