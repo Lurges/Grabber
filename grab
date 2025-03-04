@@ -1,0 +1,17 @@
+local ScreenGui = Instance.new("ScreenGui")
+local TextBox = Instance.new("TextLabel")
+
+ScreenGui.Parent = game.CoreGui
+TextBox.Parent = ScreenGui
+TextBox.Size = UDim2.new(1, 0, 1, 0)
+TextBox.BackgroundTransparency = 0.5
+TextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextBox.TextSize = 14
+TextBox.TextWrapped = true
+
+local text = ""
+for _, obj in pairs(game:GetDescendants()) do
+    text = text .. obj:GetFullName() .. "\n"
+end
+
+TextBox.Text = text
