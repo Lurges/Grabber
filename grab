@@ -7,26 +7,43 @@ if not humanoidRootPart then
     return
 end
 
+-- Function to move the EndCircle parts
 local function moveEndCircles()
     while true do
+        -- Loop through all zones (Worlds)
         for _, world in pairs(workspace.Worlds:GetChildren()) do
-            if world:FindFirstChild("EndZone") and world.EndZone:FindFirstChild("EndCircle") then
-                local endCircle = world.EndZone.EndCircle:FindFirstChild("Part")
+            local endZone = world:FindFirstChild("EndZone")
+            if endZone then
+                local endCircle = endZone:FindFirstChild("EndCircle")
                 if endCircle then
-                    endCircle.CanCollide = false -- Make sure you can walk through it
-                    
-                    -- Move up
-                    endCircle.Position = endCircle.Position + Vector3.new(0, 30, 0)
-                    wait(1)
-                    
-                    -- Move down
-                    endCircle.Position = endCircle.Position - Vector3.new(0, 30, 0)
-                    wait(1)
+                    local part = endCircle:FindFirstChild("Part")
+                    if part and part:IsA("BasePart") then
+                        -- Turn off collision
+                        part.CanCollide = false
+
+                        -- Ensure the part is not anchored to allow movement
+                        part.Anchored = false
+
+                        -- Get the position of the player (humanoidRootPart)
+                        local playerPosition = humanoidRootPart.Position
+
+                        -- Move the EndCircle part to the player's position
+                        part.Position = playerPosition
+
+                        -- Move up 30 studs
+                        part.Position = part.Position + Vector3.new(0, 30, 0)
+                        wait(1)
+
+                        -- Move down 30 studs back to the player position
+                        part.Position = playerPosition
+                    end
                 end
             end
         end
+        -- Wait for a second before repeating
+        wait(1)
     end
 end
 
--- Start moving EndCircles
+-- Start moving the EndCircle parts
 spawn(moveEndCircles)
