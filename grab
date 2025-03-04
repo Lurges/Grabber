@@ -7,39 +7,29 @@ if not humanoidRootPart then
     return
 end
 
-local replicatedStorage = game:GetService("ReplicatedStorage")
-local winEvent = replicatedStorage:FindFirstChild("GiveWin")
-
--- Function to teleport all EndCircles above the player
-local function teleportEndCircles()
+local function duplicateEndCircles()
     while true do
         for _, world in pairs(workspace.Worlds:GetChildren()) do
             if world:FindFirstChild("EndZone") and world.EndZone:FindFirstChild("EndCircle") then
                 local endCircle = world.EndZone.EndCircle:FindFirstChild("Part")
                 if endCircle then
-                    endCircle.CanCollide = false
-                    endCircle.Anchored = true
-                    endCircle.Size = Vector3.new(1, 1, 1) -- Make it smaller
-                    endCircle.Position = humanoidRootPart.Position + Vector3.new(0, 5, 0) -- Teleport above head
+                    local clone = endCircle:Clone()
+                    clone.Parent = world.EndZone.EndCircle
+                    clone.CanCollide = false
+                    clone.Anchored = true
+                    clone.Size = Vector3.new(1, 1, 1) -- Make it smaller
+                    clone.Position = humanoidRootPart.Position + Vector3.new(0, 5, 0) -- Teleport above head
+                    
+                    -- Remove the old one after duplication
+                    task.delay(1, function()
+                        clone:Destroy()
+                    end)
                 end
             end
         end
-        wait(1) -- Teleports every second
+        wait(1) -- Duplicates every second
     end
 end
 
--- Function to spam the win event (no cooldown)
-local function spamWins()
-    if winEvent then
-        while true do
-            winEvent:FireServer() -- Give unlimited wins
-            wait(0.1) -- Adjust delay if needed
-        end
-    else
-        warn("Win event not found!")
-    end
-end
-
--- Start teleporting EndCircles & bypassing win cooldown
-spawn(teleportEndCircles)
-spawn(spamWins)
+-- Start duplicating EndCircles
+spawn(duplicateEndCircles)
